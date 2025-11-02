@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.xiaoxiangshop.demos.dao.IProduct_typesDao">
+    <!--找到所有的父类型-->
+    <select id="parentTypes" resultType="product_types">
+        select * from product_types where is_parent = 1
+    </select>
+
+    <!--找到对应父类型的子类型-->
+    <select id="childTypes" resultType="product_types">
+        select * from product_types where parent_id = #{parent_id}
+    </select>
+
+    <!--找到所有类型并且找到它的父类-->
+    <resultMap id="AllTypes" type="product_types">
+        <result property="parent_id" column="parent_id"/>
+        <association property="parentType" column="parent_id"
+        select="selectById"/>
+    </resultMap>
+    <select id="findAllTypes" resultMap="AllTypes">
+        select * from product_types
+    </select>
+
+    <!--找到所有父类，并将其子类遍历到父类中-->
+    <resultMap id="AllParent" type="product_types">
+        <id property="type_id" column="type_id"/>
+        <collection property="childType" column="type_id" select="childTypes"/>
+    </resultMap>
+    <select id="findAllParentType" resultMap="AllParent">
+        select * from product_types where is_parent = 1
+    </select>
+</mapper>

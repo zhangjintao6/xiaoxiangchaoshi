@@ -1,0 +1,37 @@
+{
+  "name": "vue1784",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --mode release",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "@types/node": "^22.5.4",
+    "axios": "^1.7.7",
+    "chart.js": "^4.4.4",
+    "d3": "^7.9.0",
+    "echarts": "^5.5.1",
+    "element-plus": "^2.8.2",
+    "express": "^4.21.0",
+    "multer": "1.4.5-lts.1",
+    "swiper": "^11.1.14",
+    "vant": "^4.9.6",
+    "vue": "^3.5.4",
+    "vue-awesome-swiper": "^5.0.1",
+    "vue-chartjs": "^5.3.1",
+    "vue-echarts": "^7.0.3",
+    "vue-router": "^4.4.4",
+    "vue-virtual-scroller": "^1.1.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.1.2",
+    "less": "^4.2.0",
+    "unplugin-auto-import": "^0.18.3",
+    "unplugin-vue-components": "^0.27.4",
+    "vite": "^5.4.1"
+  }
+}

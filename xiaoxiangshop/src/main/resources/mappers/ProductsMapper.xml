@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.xiaoxiangshop.demos.dao.IProductsDao">
+
+
+    <resultMap id="productMap" type="products">
+        <id property="product_id" column="product_id"/>
+        <result property="product_name" column="product_name"/>
+        <result property="description" column="description"/>
+        <result property="price" column="price"/>
+        <result property="sale_num" column="sale_num"/>
+        <result property="stock" column="stock"/>
+        <result property="brand_id" column="brand_id"/>
+        <result property="type_id" column="type_id"/>
+        <result property="create_time" column="create_time"/>
+        <result property="img" column="img"/>
+        <result property="img_detail" column="img_detail"/>
+
+        <association property="types" column="type_id" javaType="Product_types">
+            <id property="type_id" column="type_id"/>
+            <result property="type_name" column="type_name"></result>
+            <result property="is_parent" column="is_parent"/>
+            <result property="parent_id" column="parent_id"/>
+            <result property="img" column="img"/>
+        </association>
+
+        <association property="brand" column="brand_id" javaType="Product_brand">
+            <id property="brand_id" column="brand_id"/>
+            <result property="brand_name" column="brand_name"></result>
+        </association>
+
+        <collection property="productLabels" javaType="ArrayList" ofType="label" column="product_id"
+        select="com.example.xiaoxiangshop.demos.dao.ILabelDao.findLabelByPid">
+            <id property="label_id" column="label_id" />
+            <result property="label_name" column="label_name" />
+        </collection>
+
+        <collection property="promotions" javaType="ArrayList" ofType="Promotions">
+            <id property="promotion_id" column="promotion_id" />
+            <result property="promotion_name" column="promotion_name" />
+            <result property="discount_rate" column="discount_rate"/>
+        </collection>
+
+
+
+    </resultMap>
+
+
+    <select id="findProducts" resultMap="productMap">
+        SELECT t3.*,
+        <if test="label_ids.size() > 0">
+            t2.label_id,t1.label_name,
+        </if>
+        <if test="label_ids.size()==2">
+            t5.label_id,t6.label_name,
+        </if>
+
+        t4.type_name,t4.is_parent,t4.parent_id
+        <if test="rate != null and rate>=0">
+            ,t7.promotion_name,t7.discount_rate
+        </if>
+        FROM products t3
+        <if test="label_ids.size() > 0">
+            INNER JOIN label_details t2 ON t2.product_id = t3.product_id
+            INNER JOIN label t1 ON t1.label_id = t2.label_id
+        </if>
+
+        INNER JOIN product_types t4 ON t3.type_id = t4.type_id
+
+        <if test="label_ids.size()==2">
+            INNER JOIN label_details t5 ON  t2.product_id = t5.product_id
+            INNER JOIN label t6 ON t6.label_id = t5.label_id
+        </if>
+
+        <if test="rate != null and rate>=0">
+            INNER JOIN promotions t7 ON t3.product_id = t7.product_id
+        </if>
+
+        <where>
+            <if test="pt_id != null and pt_id>0">
+                and t4.parent_id = #{pt_id}
+            </if>
+            <if test="ct_id != null and ct_id>0">
+                and t3.type_id = #{ct_id}
+            </if>
+
+            <foreach collection="label_ids" index="index" item="label_id"  >
+                <if test="index == 0">
+                    and t2.label_id = #{label_id}
+                </if>
+                <if test=" index == 1">
+                    and t5.label_id = #{label_id}
+                </if>
+            </foreach>
+
+            <if test="rate != null and rate>0">
+                and t7.discount_rate = #{rate}
+            </if>
+        </where>
+        GROUP BY t3.product_id
+
+        <if test="sort!=null and sort != ''">
+            order by t3.${sort}
+            <if test="order == 1">
+                desc
+            </if>
+        </if>
+
+    </select>
+
+
+
+    <select id="searchProducts"  resultMap="productMap">
+        select t1.*,t2.brand_name
+
+        <if test="label_ids.size() > 0">
+            ,t3.label_id,t4.label_name
+        </if>
+        <if test="label_ids.size() == 2">
+            ,t5.label_id,t6.label_name
+        </if>
+        <if test="rate != null and rate>=0">
+            ,t7.promotion_name,t7.discount_rate
+        </if>
+        from products t1
+        inner join product_brand t2 on t1.brand_id=t2.brand_id
+
+        <if test="label_ids.size() > 0">
+            inner join label_details t3 ON t1.product_id = t3.product_id
+            inner join label t4 ON t4.label_id = t3.label_id
+        </if>
+        <if test="label_ids.size() == 2">
+            inner join label_details t5 on t5.product_id = t3.product_id
+            inner join label t6 on t6.label_id = t5.label_id
+        </if>
+        <if test="rate != null and rate>=0">
+            inner join promotions t7 ON t1.product_id = t7.product_id
+        </if>
+
+        <where>
+            <if test="keyword!=null and keyword != ''">
+                and t1.product_name LIKE CONCAT('%', #{keyword}, '%') OR t2.brand_name LIKE CONCAT('%', #{keyword}, '%') OR t1.description LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+
+            <if test="brand_id != null and brand_id >0">
+                and t1.brand_id = #{brand_id}
+            </if>
+
+            <if test="ct_id != null and ct_id > 0">
+                and t1.type_id = #{ct_id}
+            </if>
+            <if test="rate != null and rate>0">
+                and t7.discount_rate = #{rate}
+            </if>
+
+            <foreach collection="label_ids" index="index" item="label_id"  >
+                <if test="index == 0">
+                    and t3.label_id = #{label_id}
+                </if>
+                <if test=" index == 1">
+                    and t5.label_id = #{label_id}
+                </if>
+            </foreach>
+
+            <if test="low != null and low >=0">
+                and t1.price > #{low}
+            </if>
+            <if test="high != null and high >=0">
+                and #{high} > t1.price
+            </if>
+
+            <if test="sort!=null and sort != ''">
+                order by t1.${sort}
+                <if test="order == 1">
+                    desc
+                </if>
+            </if>
+
+        </where>
+
+    </select>
+
+
+    <select id="findProductsByLabelId" resultType="products">
+        SELECT p.*
+        FROM `products` p
+                 JOIN `label_details` ld ON p.product_id = ld.product_id
+                 JOIN `label` l ON ld.label_id = l.label_id
+        WHERE l.label_id = #{LabelId};
+    </select>
+
+
+    <select id="findProductsByNameOrBrandOrPrice" resultType="products">
+        SELECT * FROM products WHERE product_name LIKE CONCAT('%', #{keyword}, '%') OR brand_id LIKE CONCAT('%', #{keyword}, '%') OR price LIKE CONCAT('%', #{keyword}, '%')
+    </select>
+
+
+
+    <resultMap id="product_all" type="products">
+        <result column="type_id" property="type_id"/>
+        <result column="brand_id" property="brand_id"/>
+        <association property="types" column="type_id"
+                     select="com.example.xiaoxiangshop.demos.dao.IProduct_typesDao.selectById"/>
+        <association property="brand" column="brand_id"
+                     select="com.example.xiaoxiangshop.demos.dao.IProduct_brandDao.selectById"/>
+    </resultMap>
+
+
+    <select id="findAllProducts" resultMap="product_all">
+        select * from products
+    </select>
+
+    <select id="findAllProductsByCheck" resultMap="product_all">
+        select * from products ${ew.customSqlSegment}
+    </select>
+
+     <select id="findProductsByTypeId" resultType="products">
+         select * from products where type_id = #{id}
+     </select>
+
+</mapper>
